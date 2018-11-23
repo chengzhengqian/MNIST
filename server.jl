@@ -74,7 +74,7 @@ end
 function make_input()
     result=zeros(28,28)
     for i =data_points
-        s=map((x)->max(min(trunc(Int,x*28),28),1), i)
+        s=map((x)->max(min(trunc(Int,x*28+1),28),1), i)
         add_point(s[1],s[2],result,1)
     end
     return result
