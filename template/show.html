@@ -1,0 +1,146 @@
+<!DOCTYPE html><html><head><script src =
+        "https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+    function toPrecise(x){
+	return Number.parseFloat(x).toPrecision(3);
+    }
+      $(document).ready(function() {
+	  var canvas = document.getElementById('sketchpad');
+	  var ctx = canvas.getContext("2d");
+	  ctx.strokeStyle = "#222222";
+	  ctx.lineWith = 2;
+	  var size=10;
+	  // 	  $.getJSON("_add_numbers", {
+	  // 	      a : $('input[name="a"]').val(),
+	  // 	      b : $('input[name="b"]').val()
+	  // 	  },
+	  // 		    function(result) {
+	  // 			$("#result").text(result.result);
+	  // 		    });
+	  function drawDot(ctx,x,y) {
+	      r=0; g=0; b=0; a=255;
+	      ctx.fillStyle = "rgba("+r+","+g+","+b+","+(a/255)+")";
+	      ctx.beginPath();
+	      ctx.arc(x, y, size, 0, Math.PI*2, true);
+	      ctx.closePath();
+	      ctx.fill();
+	      $.getJSON("_add_point",
+			{x:x/canvas.width,y:y/canvas.height},
+			function(result){$("#result").text(result.result);});
+	  };
+	  function fillColor(canvas,ctx){
+	      ctx.fillStyle="#FFaaFF";
+	      ctx.fillRect(0,0,canvas.width,canvas.height);
+	  }
+	  fillColor(canvas,ctx);
+	  function clearCanvas(canvas,ctx) {
+	      //	      ctx.clearRect(0, 0, canvas.width, canvas.height);
+	      fillColor(canvas,ctx);
+	      $.getJSON("_clean",
+		       function(result){$("#result").text(result.result);});
+	  }
+	  var mouseX,mouseY,mouseDown=0;
+	  
+	  function sketchpad_mouseDown() {
+	      mouseDown=1;
+	      drawDot(ctx,mouseX,mouseY);
+	  }
+	  
+	  function sketchpad_mouseUp() {
+	      mouseDown=0;
+	  }
+	  
+	  function sketchpad_mouseMove(e) { 
+	      getMousePos(e);
+	      if (mouseDown==1) { 
+		  drawDot(ctx,mouseX,mouseY); 
+	      }
+	  }
+
+	  function getMousePos(e) {
+	      if (!e)
+		  var e = event;
+	      if (e.offsetX) {
+		  mouseX = e.offsetX;
+		  mouseY = e.offsetY;
+	      }
+	      else if (e.layerX) {
+		  mouseX = e.layerX;
+		  mouseY = e.layerY;
+	      }
+	  }
+	  canvas.addEventListener('mousedown', sketchpad_mouseDown, false);
+	  canvas.addEventListener('mousemove', sketchpad_mouseMove, false);
+	  window.addEventListener('mouseup', sketchpad_mouseUp, false);
+	  
+	  var touchX,touchY;
+	  
+	  function sketchpad_touchStart() {
+	      getTouchPos();
+	      drawDot(ctx,touchX,touchY,12);
+	      
+	      // Prevents an additional mousedown event being triggered
+	      event.preventDefault();
+	  }
+	  
+	  function sketchpad_touchMove(e) { 
+	      // Update the touch co-ordinates
+	      getTouchPos(e);
+	      
+	      // During a touchmove event, unlike a mousemove event, we don't need to check if the touch is engaged, since there will always be contact with the screen by definition.
+	      drawDot(ctx,touchX,touchY,12); 
+	      
+	      // Prevent a scrolling action as a result of this touchmove triggering.
+	      event.preventDefault();
+	  }
+	  
+	  // Get the touch position relative to the top-left of the canvas
+	  // When we get the raw values of pageX and pageY below, they take into account the scrolling on the page
+	  // but not the position relative to our target div. We'll adjust them using "target.offsetLeft" and
+	  // "target.offsetTop" to get the correct values in relation to the top left of the canvas.
+	  function getTouchPos(e) {
+	      if (!e)
+		  var e = event;
+	      
+	      if (e.touches) {
+		  if (e.touches.length == 1) { // Only deal with one finger
+		      var touch = e.touches[0]; // Get the information for finger #1
+		      touchX=touch.pageX-touch.target.offsetLeft;
+		      touchY=touch.pageY-touch.target.offsetTop;
+		  }
+	      }
+	  }
+
+	  canvas.addEventListener('touchstart', sketchpad_touchStart, false);
+	  canvas.addEventListener('touchmove', sketchpad_touchMove, false);
+	  $("#clear").click(function(){
+	      clearCanvas(canvas,ctx);
+	  });
+	  $("#predict").click(function(){
+	      $.getJSON("_predict",
+			function(result){$("#result").text(result.result);});
+	  });
+	  // $("button")
+	  //     .click(function() {
+	  // 	  $.getJSON("_add_numbers", {
+	  // 	      a : $('input[name="a"]').val(),
+	  // 	      b : $('input[name="b"]').val()
+	  // 	  },
+	  // 		    function(result) {
+	  // 			$("#result").text(result.result);
+	  // 		    });
+	  //     });
+    });
+</script>
+</head>
+<body>
+
+<button id="clear">clear</button>
+<button id="predict">predict</button>
+<p>
+   <span id=result>??</span>
+</p>
+
+<canvas id="sketchpad" width="280" height="280"></canvas>
+</body>
+</html>
