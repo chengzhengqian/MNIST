@@ -7,36 +7,6 @@ data_points=[]
 function toFloat(s)
     return parse(Float32,s)
 end
-task=@async begin
-    server=listen(port)
-    while true
-        sock=accept(server)
-        @async while isopen(sock)
-            global data_points,command
-            s=readline(sock)
-            cs=split(s,',')            
-            if(cs[1]=="ADD"&&length(cs)==3)
-                data=[toFloat(cs[2]),toFloat(cs[3])]
-                data_points=vcat(data_points,[data])
-                print("ADD:",data,"\n")
-                write(sock,"ADD\n")
-            elseif(cs[1]=="CLEAN")
-                data_points=[]
-                print("CLEAN\n")
-                write(sock,"CLEAN\n")
-            elseif(cs[1]=="PREDICT")
-                r=make_input()
-                print_img(r)
-                pred=argmax(predict(r))-1
-                print("PREDICT:",pred,"\n")
-                write(sock,@sprintf("%s\n",pred))
-            else
-                print("UNKNOWN\n")
-                write(sock,"UNKNOWN\n")
-            end
-        end        
-    end
-end
 
 
 # client=connect(10104)
@@ -81,3 +51,35 @@ function make_input()
 end
 
 # i=40;print_img(train_x[:,:,i]);train_y[i]
+function start_server()
+    task=@async begin
+        server=listen(port)
+        while true
+            sock=accept(server)
+            @async while isopen(sock)
+                global data_points,command
+                s=readline(sock)
+                cs=split(s,',')            
+                if(cs[1]=="ADD"&&length(cs)==3)
+                    data=[toFloat(cs[2]),toFloat(cs[3])]
+                    data_points=vcat(data_points,[data])
+                    print("ADD:",data,"\n")
+                    write(sock,"ADD\n")
+                elseif(cs[1]=="CLEAN")
+                    data_points=[]
+                    print("CLEAN\n")
+                    write(sock,"CLEAN\n")
+                elseif(cs[1]=="PREDICT")
+                    r=make_input()
+                    print_img(r)
+                    pred=argmax(predict(r))-1
+                    print("PREDICT:",pred,"\n")
+                    write(sock,@sprintf("%s\n",pred))
+                else
+                    print("UNKNOWN\n")
+                    write(sock,"UNKNOWN\n")
+                end
+            end        
+        end
+    end
+end
