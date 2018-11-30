@@ -1,7 +1,7 @@
 using Sockets
 using Printf
-port=10116
 
+port=10116
 data_points=[]
 
 function toFloat(s)
@@ -17,7 +17,7 @@ end
 
 # println(client,"good")
 
-include("naive_Bayes.jl")
+include("naiveBayes.jl")
 
 function add_point(x,y,img,w)
     for i=-w:w
@@ -50,6 +50,10 @@ function make_input()
     return result
 end
 
+function predict(x)
+    return NaiveBayes.predict(x)
+end
+
 # i=40;print_img(train_x[:,:,i]);train_y[i]
 function start_server()
     task=@async begin
@@ -72,7 +76,7 @@ function start_server()
                 elseif(cs[1]=="PREDICT")
                     r=make_input()
                     print_img(r)
-                    pred=argmax(predict(r))-1
+                    pred=predict(r)
                     print("PREDICT:",pred,"\n")
                     write(sock,@sprintf("%s\n",pred))
                 else
@@ -82,4 +86,10 @@ function start_server()
             end        
         end
     end
+    return task
 end
+
+#  task=start_server()
+# NaiveBayes.train()
+# ex=InterruptException()
+# Base.throwto(task,ex)
